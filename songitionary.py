@@ -48,13 +48,8 @@ def getSongLyrics(session, path):
     lyrics = ""
     for part in lyricsParts:
         text = part.get_text()
-        text = re.sub("\[( *(\w|&|:|-)* *)*\]", "", text)
-        text = text.replace("(","")
-        text = text.replace(")","")
-        text = text.replace(",","")
-        text = text.replace(".","")
-        text = text.replace("?","")
-        text = text.replace("!","")
+        text = re.sub("\[( *(\w|&|:|-)* *)*\]|,|!|\?|\.|\(|\)", "", text)
+        text = re.sub("\n+", "\n", text)
         text = text.lower()
         lyrics += text
     return lyrics
