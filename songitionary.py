@@ -49,11 +49,18 @@ def getSongLyrics(session, path):
     for part in lyricsParts:
         text = part.get_text()
         text = re.sub("\[( *(\w|&|:|-)* *)*\]|,|!|\?|\.|\(|\)", "", text)
-        text = re.sub("\n+", "\n", text)
         text = text.lower()
         lyrics += text
     return lyrics
 
+def countWords(text):
+    counter = {}
+    text = text.split()
+    for word in text:
+        amount = counter.get(word)
+        amount = 1 if (amount == None) else amount + 1
+        counter.update({word:amount})
+    return counter
 
 session = initializeSession("BEARER TOKEN")
 name = input("PODAJ WYKONAWCE: ")
@@ -62,3 +69,5 @@ print("Jego Id to {0}".format(id))
 addresses = getAllSongAddresses(session, id)
 lyrics = getSongLyrics(session,addresses.pop())
 print(lyrics)
+counter = countWords(lyrics)
+print(counter)
