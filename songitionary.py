@@ -9,14 +9,21 @@ def getQueryParams(queryPhrase):
 def initializeSession(bearer):
     return OAuth2Session(123,123,bearer)
 
-def getArtistId(session, queryPhrase):
-    queryPhrase = getQueryParams(queryPhrase)
+def getArtistId(session, artistName):
+    queryPhrase = getQueryParams(artistName)
+
     uri = "https://api.genius.com/search?q={0}".format(queryPhrase)
     
     response = session.request("get", uri)
 
     parsedResponse = response.json()
-    return(parsedResponse["response"]["hits"][0]["result"]["primary_artist"]["id"])
+
+    for song in parsedResponse["response"]["hits"]:
+        if song["result"]["primary_artist"]["name"].lower() == artistName.lower():
+            id = song["result"]["primary_artist"]["id"]
+            print("Nazwa wykonawcy to: {0}".format(song["result"]["primary_artist"]["name"]))
+            return id
+    return None     
     
 def getAllSongAddresses(session, artistId):
 
@@ -37,6 +44,7 @@ def getAllSongAddresses(session, artistId):
     return songAddresses
 
 def getSongLyrics(session, path):
+    print("PROCESSING SONG: {0}".format(path))
     uri = "https://genius.com{0}".format(path)
     page = session.request("get", uri)
     html = BeautifulSoup(page.text, "html.parser")
@@ -48,6 +56,7 @@ def getSongLyrics(session, path):
     lyrics = ""
     for part in lyricsParts:
         text = part.get_text()
+        print(text)
         text = re.sub("\[( *(\w|&|:|-)* *)*\]|,|!|\?|\.|\(|\)", "", text)
         text = text.lower()
         lyrics += text
@@ -62,12 +71,26 @@ def countWords(text):
         counter.update({word:amount})
     return counter
 
+def addToDictionary(main,dict2):
+    for word in dict2:
+        value = main.get(word)
+        value = dict2[word] if (value == None) else value+dict2[word]
+        main.update({word:value})
+
+
 session = initializeSession("BEARER TOKEN")
 name = input("PODAJ WYKONAWCE: ")
 id = getArtistId(session, name)
+if(id == None):
+    print("Nie znaleziono artysty.")
+    exit()
 print("Jego Id to {0}".format(id))
+allWords = {}
 addresses = getAllSongAddresses(session, id)
-lyrics = getSongLyrics(session,addresses.pop())
-print(lyrics)
-counter = countWords(lyrics)
-print(counter)
+for address in addresses:
+    lyrics = getSongLyrics(session,address)
+    #print(lyrics)
+    counter = countWords(lyrics)
+    #print(counter)
+    addToDictionary(allWords, counter)
+print(allWords)
